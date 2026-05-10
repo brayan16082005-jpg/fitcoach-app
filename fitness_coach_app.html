@@ -1,0 +1,1525 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>FitCoach Pro — Gestión de Clientes</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:ital,wght@0,300;0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js"></script>
+<style>
+:root {
+  --bg: #0f0f0f;
+  --bg2: #181818;
+  --bg3: #222;
+  --bg4: #2a2a2a;
+  --border: #2e2e2e;
+  --border2: #3a3a3a;
+  --text: #f0f0f0;
+  --muted: #888;
+  --muted2: #555;
+  --green: #b5f23d;
+  --green-dim: rgba(181,242,61,0.12);
+  --green-dark: #1a2a00;
+  --blue: #4da6ff;
+  --blue-dim: rgba(77,166,255,0.1);
+  --orange: #ff8c42;
+  --orange-dim: rgba(255,140,66,0.1);
+  --purple: #a78bfa;
+  --purple-dim: rgba(167,139,250,0.1);
+  --red: #ff5757;
+  --red-dim: rgba(255,87,87,0.1);
+  --yellow: #ffd166;
+  --radius: 10px;
+  --radius-lg: 14px;
+}
+* { margin:0; padding:0; box-sizing:border-box; }
+body { background:var(--bg); color:var(--text); font-family:'DM Sans',sans-serif; min-height:100vh; }
+
+/* SIDEBAR */
+.layout { display:flex; min-height:100vh; }
+.sidebar {
+  width:240px; min-height:100vh; background:var(--bg2);
+  border-right:1px solid var(--border); display:flex; flex-direction:column;
+  position:fixed; left:0; top:0; bottom:0; z-index:100;
+}
+.sidebar-logo {
+  padding:24px 20px 20px;
+  border-bottom:1px solid var(--border);
+}
+.sidebar-logo h1 {
+  font-family:'Bebas Neue',sans-serif;
+  font-size:1.6rem; letter-spacing:3px; color:var(--green); line-height:1;
+}
+.sidebar-logo p { font-size:0.7rem; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-top:2px; }
+
+.client-selector { padding:16px; border-bottom:1px solid var(--border); }
+.client-selector label { font-size:0.7rem; color:var(--muted); text-transform:uppercase; letter-spacing:1px; display:block; margin-bottom:6px; }
+.client-selector select {
+  width:100%; background:var(--bg3); border:1px solid var(--border2);
+  color:var(--text); padding:8px 10px; border-radius:var(--radius);
+  font-size:0.82rem; font-family:'DM Sans',sans-serif; cursor:pointer;
+}
+.btn-new-client {
+  width:100%; margin-top:8px; padding:7px; background:var(--green-dim);
+  border:1px solid var(--green); color:var(--green); border-radius:var(--radius);
+  font-size:0.78rem; font-family:'DM Sans',sans-serif; cursor:pointer;
+  font-weight:500; letter-spacing:0.5px;
+}
+.btn-new-client:hover { background:var(--green); color:#000; }
+
+.nav { padding:12px 8px; flex:1; }
+.nav-item {
+  display:flex; align-items:center; gap:10px;
+  padding:10px 12px; border-radius:var(--radius);
+  cursor:pointer; margin-bottom:2px; transition:all 0.15s;
+  font-size:0.85rem; color:var(--muted);
+}
+.nav-item:hover { background:var(--bg3); color:var(--text); }
+.nav-item.active { background:var(--green-dim); color:var(--green); font-weight:500; }
+.nav-icon { font-size:1.1rem; width:20px; text-align:center; }
+
+.sidebar-footer { padding:16px; border-top:1px solid var(--border); }
+.sidebar-footer p { font-size:0.7rem; color:var(--muted2); text-align:center; }
+
+/* MAIN */
+.main { margin-left:240px; flex:1; }
+.topbar {
+  padding:16px 28px; background:var(--bg2);
+  border-bottom:1px solid var(--border);
+  display:flex; align-items:center; justify-content:space-between;
+  position:sticky; top:0; z-index:50;
+}
+.topbar h2 { font-family:'Bebas Neue',sans-serif; font-size:1.4rem; letter-spacing:2px; color:var(--text); }
+.topbar-right { display:flex; align-items:center; gap:10px; }
+.badge-client {
+  background:var(--bg3); border:1px solid var(--border2);
+  padding:5px 12px; border-radius:20px; font-size:0.78rem; color:var(--muted);
+}
+.badge-client span { color:var(--green); font-weight:500; }
+
+.content { padding:24px 28px; }
+
+/* CARDS */
+.card {
+  background:var(--bg2); border:1px solid var(--border);
+  border-radius:var(--radius-lg); padding:20px;
+}
+.card-title {
+  font-size:0.7rem; font-weight:500; text-transform:uppercase;
+  letter-spacing:1.5px; color:var(--muted); margin-bottom:14px;
+  display:flex; align-items:center; gap:8px;
+}
+.card-title .dot { width:6px; height:6px; border-radius:50%; }
+
+.grid-2 { display:grid; grid-template-columns:1fr 1fr; gap:16px; margin-bottom:16px; }
+.grid-3 { display:grid; grid-template-columns:1fr 1fr 1fr; gap:16px; margin-bottom:16px; }
+.grid-4 { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:16px; }
+
+/* STAT CARDS */
+.stat-card {
+  background:var(--bg3); border:1px solid var(--border);
+  border-radius:var(--radius); padding:14px 16px;
+}
+.stat-val { font-family:'Bebas Neue',sans-serif; font-size:1.8rem; line-height:1; }
+.stat-label { font-size:0.72rem; color:var(--muted); text-transform:uppercase; letter-spacing:1px; margin-top:3px; }
+.stat-delta { font-size:0.72rem; margin-top:4px; }
+.delta-pos { color:var(--green); }
+.delta-neg { color:var(--red); }
+
+/* FORMS */
+.form-row { display:grid; gap:12px; margin-bottom:12px; }
+.form-row.cols-2 { grid-template-columns:1fr 1fr; }
+.form-row.cols-3 { grid-template-columns:1fr 1fr 1fr; }
+.form-row.cols-4 { grid-template-columns:repeat(4,1fr); }
+.field label {
+  display:block; font-size:0.72rem; color:var(--muted);
+  text-transform:uppercase; letter-spacing:1px; margin-bottom:5px;
+}
+.field input, .field select, .field textarea {
+  width:100%; background:var(--bg3); border:1px solid var(--border2);
+  color:var(--text); padding:9px 12px; border-radius:var(--radius);
+  font-size:0.85rem; font-family:'DM Sans',sans-serif;
+}
+.field textarea { resize:vertical; min-height:80px; }
+.field input:focus, .field select:focus, .field textarea:focus {
+  outline:none; border-color:var(--green); background:var(--bg4);
+}
+
+/* BUTTONS */
+.btn {
+  padding:9px 18px; border-radius:var(--radius); font-size:0.83rem;
+  font-family:'DM Sans',sans-serif; font-weight:500; cursor:pointer;
+  transition:all 0.15s; border:none;
+}
+.btn-primary { background:var(--green); color:#000; }
+.btn-primary:hover { opacity:0.9; }
+.btn-outline { background:transparent; border:1px solid var(--border2); color:var(--muted); }
+.btn-outline:hover { border-color:var(--green); color:var(--green); }
+.btn-danger { background:var(--red-dim); border:1px solid var(--red); color:var(--red); }
+.btn-sm { padding:6px 12px; font-size:0.75rem; }
+.btn-ai { background:var(--green-dim); border:1px solid var(--green); color:var(--green); }
+.btn-ai:hover { background:var(--green); color:#000; }
+
+/* TABS dentro de sección */
+.sub-tabs { display:flex; gap:4px; margin-bottom:20px; padding:4px; background:var(--bg3); border-radius:var(--radius); width:fit-content; }
+.sub-tab {
+  padding:7px 16px; border-radius:8px; font-size:0.8rem;
+  cursor:pointer; color:var(--muted); transition:all 0.15s;
+}
+.sub-tab.active { background:var(--bg2); color:var(--text); font-weight:500; }
+
+/* TABLES */
+.data-table { width:100%; border-collapse:collapse; font-size:0.83rem; }
+.data-table th {
+  text-align:left; padding:10px 14px; color:var(--muted);
+  font-size:0.7rem; text-transform:uppercase; letter-spacing:1px;
+  border-bottom:1px solid var(--border); font-weight:400;
+}
+.data-table td { padding:11px 14px; border-bottom:1px solid var(--border); }
+.data-table tr:last-child td { border-bottom:none; }
+.data-table tr:hover td { background:var(--bg3); }
+
+/* TAGS */
+.tag {
+  display:inline-block; padding:2px 8px; border-radius:20px;
+  font-size:0.7rem; font-weight:500;
+}
+.tag-green { background:var(--green-dim); color:var(--green); border:1px solid rgba(181,242,61,0.3); }
+.tag-blue { background:var(--blue-dim); color:var(--blue); border:1px solid rgba(77,166,255,0.3); }
+.tag-orange { background:var(--orange-dim); color:var(--orange); border:1px solid rgba(255,140,66,0.3); }
+.tag-purple { background:var(--purple-dim); color:var(--purple); border:1px solid rgba(167,139,250,0.3); }
+.tag-red { background:var(--red-dim); color:var(--red); border:1px solid rgba(255,87,87,0.3); }
+
+/* PROGRESS BAR */
+.progress-bar-wrap { background:var(--bg4); border-radius:20px; height:6px; overflow:hidden; margin-top:6px; }
+.progress-bar-fill { height:100%; border-radius:20px; background:var(--green); transition:width 0.5s; }
+
+/* PHOTO GRID */
+.photo-grid { display:grid; grid-template-columns:repeat(3,1fr); gap:10px; }
+.photo-slot {
+  aspect-ratio:3/4; background:var(--bg3); border:1px dashed var(--border2);
+  border-radius:var(--radius); display:flex; flex-direction:column;
+  align-items:center; justify-content:center; cursor:pointer;
+  transition:all 0.15s; position:relative; overflow:hidden;
+}
+.photo-slot:hover { border-color:var(--green); }
+.photo-slot img { width:100%; height:100%; object-fit:cover; border-radius:var(--radius); }
+.photo-slot .photo-label {
+  position:absolute; bottom:0; left:0; right:0;
+  background:rgba(0,0,0,0.7); padding:6px 8px;
+  font-size:0.7rem; color:var(--muted); text-align:center;
+}
+.photo-add-icon { font-size:1.5rem; color:var(--muted2); margin-bottom:6px; }
+.photo-add-text { font-size:0.72rem; color:var(--muted2); }
+
+/* MEAL BLOCK */
+.meal-block {
+  background:var(--bg3); border:1px solid var(--border);
+  border-radius:var(--radius); margin-bottom:10px; overflow:hidden;
+}
+.meal-block-header {
+  padding:10px 14px; display:flex; justify-content:space-between;
+  align-items:center; border-bottom:1px solid var(--border);
+  background:var(--bg4);
+}
+.meal-block-name { font-size:0.85rem; font-weight:500; }
+.meal-block-macros { font-size:0.75rem; color:var(--muted); }
+.meal-block-body { padding:10px 14px; }
+.food-row {
+  display:grid; grid-template-columns:2fr 80px 80px 80px 80px 80px 30px;
+  gap:8px; align-items:center; padding:5px 0;
+  border-bottom:1px solid var(--border); font-size:0.8rem;
+}
+.food-row:last-child { border-bottom:none; }
+.food-row .col-head { color:var(--muted); font-size:0.68rem; text-transform:uppercase; }
+
+/* WORKOUT BLOCK */
+.exercise-row {
+  display:grid; grid-template-columns:2fr 60px 80px 80px 80px 30px;
+  gap:8px; align-items:center; padding:7px 0;
+  border-bottom:1px solid var(--border); font-size:0.8rem;
+}
+.exercise-row:last-child { border-bottom:none; }
+.sets-cell { display:flex; gap:4px; flex-wrap:wrap; }
+.set-chip {
+  background:var(--bg4); border:1px solid var(--border2);
+  border-radius:4px; padding:2px 6px; font-size:0.7rem; color:var(--muted);
+}
+
+/* CHART WRAPPER */
+.chart-wrap { position:relative; height:200px; }
+
+/* SECTIONS (mostrar/ocultar) */
+.section { display:none; }
+.section.active { display:block; }
+
+/* MODAL */
+.modal-overlay {
+  display:none; position:fixed; inset:0; background:rgba(0,0,0,0.7);
+  z-index:200; align-items:center; justify-content:center;
+}
+.modal-overlay.open { display:flex; }
+.modal {
+  background:var(--bg2); border:1px solid var(--border2);
+  border-radius:var(--radius-lg); padding:24px; width:520px;
+  max-width:90vw; max-height:85vh; overflow-y:auto;
+}
+.modal-header {
+  display:flex; justify-content:space-between; align-items:center;
+  margin-bottom:20px;
+}
+.modal-title { font-family:'Bebas Neue',sans-serif; font-size:1.3rem; letter-spacing:2px; }
+.modal-close { background:none; border:none; color:var(--muted); cursor:pointer; font-size:1.2rem; }
+
+/* AI LOADER */
+.ai-loader {
+  display:none; align-items:center; gap:10px;
+  padding:12px 16px; background:var(--green-dim);
+  border:1px solid rgba(181,242,61,0.3); border-radius:var(--radius);
+  margin-bottom:12px;
+}
+.ai-loader.show { display:flex; }
+.spinner {
+  width:18px; height:18px; border:2px solid var(--border2);
+  border-top-color:var(--green); border-radius:50%;
+  animation:spin 0.7s linear infinite;
+}
+@keyframes spin { to { transform:rotate(360deg); } }
+
+.divider { height:1px; background:var(--border); margin:20px 0; }
+
+/* scrollbar */
+::-webkit-scrollbar { width:5px; }
+::-webkit-scrollbar-track { background:var(--bg); }
+::-webkit-scrollbar-thumb { background:var(--border2); border-radius:10px; }
+</style>
+</head>
+<body>
+<div class="layout">
+
+<!-- SIDEBAR -->
+<aside class="sidebar">
+  <div class="sidebar-logo">
+    <h1>FitCoach</h1>
+    <p>Pro — Gestión de clientes</p>
+  </div>
+
+  <div class="client-selector">
+    <label>Cliente activo</label>
+    <select id="client-select" onchange="switchClient(this.value)">
+      <option value="0">Carlos Rodríguez</option>
+      <option value="1">María López</option>
+      <option value="2">+ Nuevo cliente</option>
+    </select>
+    <button class="btn-new-client" onclick="openNewClientModal()">+ Agregar cliente</button>
+  </div>
+
+  <nav class="nav">
+    <div class="nav-item active" onclick="showSection('dashboard', this)">
+      <span class="nav-icon">📊</span> Dashboard
+    </div>
+    <div class="nav-item" onclick="showSection('nutricion', this)">
+      <span class="nav-icon">🥗</span> Nutrición
+    </div>
+    <div class="nav-item" onclick="showSection('entrenamiento', this)">
+      <span class="nav-icon">🏋️</span> Entrenamiento
+    </div>
+    <div class="nav-item" onclick="showSection('periodizacion', this)">
+      <span class="nav-icon">📅</span> Periodización
+    </div>
+    <div class="nav-item" onclick="showSection('progresos', this)">
+      <span class="nav-icon">📈</span> Progresos
+    </div>
+    <div class="nav-item" onclick="showSection('fotos', this)">
+      <span class="nav-icon">📷</span> Fotos
+    </div>
+    <div class="nav-item" onclick="showSection('anamnesis', this)">
+      <span class="nav-icon">📋</span> Anamnesis
+    </div>
+  </nav>
+
+  <div class="sidebar-footer">
+    <p>FitCoach Pro v1.0</p>
+  </div>
+</aside>
+
+<!-- MAIN CONTENT -->
+<main class="main">
+  <div class="topbar">
+    <h2 id="section-title">Dashboard</h2>
+    <div class="topbar-right">
+      <div class="badge-client">Cliente: <span id="client-name-badge">Carlos Rodríguez</span></div>
+    </div>
+  </div>
+
+  <div class="content">
+
+    <!-- ========== DASHBOARD ========== -->
+    <div id="section-dashboard" class="section active">
+
+      <div class="grid-4">
+        <div class="stat-card">
+          <div class="stat-val" style="color:var(--green)">90.4</div>
+          <div class="stat-label">Peso actual (kg)</div>
+          <div class="stat-delta delta-neg">▼ 1.2 kg desde inicio</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" style="color:var(--blue)">22%</div>
+          <div class="stat-label">% Grasa corporal</div>
+          <div class="stat-delta delta-neg">▼ 1.5% desde inicio</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" style="color:var(--orange)">82</div>
+          <div class="stat-label">Cintura (cm)</div>
+          <div class="stat-delta delta-neg">▼ 3 cm</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-val" style="color:var(--purple)">38</div>
+          <div class="stat-label">Días de reto</div>
+          <div class="stat-delta" style="color:var(--muted)">52 días restantes</div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title"><div class="dot" style="background:var(--green)"></div>Progreso de peso — últimas 6 semanas</div>
+          <div class="chart-wrap"><canvas id="chart-peso"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><div class="dot" style="background:var(--blue)"></div>Adherencia al plan</div>
+          <div class="chart-wrap"><canvas id="chart-adherencia"></canvas></div>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title"><div class="dot" style="background:var(--orange)"></div>Resumen nutricional hoy</div>
+          <div style="display:grid;grid-template-columns:1fr 1fr;gap:12px;">
+            <div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:0.8rem;">Calorías</span><span style="font-size:0.8rem;color:var(--green);font-weight:500;">2,480 / 2,500</span></div>
+              <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:99%"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:0.8rem;">Proteína</span><span style="font-size:0.8rem;color:var(--green);font-weight:500;">188g / 195g</span></div>
+              <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:96%"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:0.8rem;">Carbos</span><span style="font-size:0.8rem;color:var(--yellow);font-weight:500;">210g / 230g</span></div>
+              <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:91%;background:var(--yellow)"></div></div>
+            </div>
+            <div>
+              <div style="display:flex;justify-content:space-between;margin-bottom:4px;"><span style="font-size:0.8rem;">Grasas</span><span style="font-size:0.8rem;color:var(--blue);font-weight:500;">68g / 72g</span></div>
+              <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:94%;background:var(--blue)"></div></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><div class="dot" style="background:var(--purple)"></div>Entrenamiento — semana actual</div>
+          <div style="font-size:0.83rem;">
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">
+              <span>Lunes — Pecho / Tríceps</span><span class="tag tag-green">✓ Completado</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">
+              <span>Martes — Espalda / Bíceps</span><span class="tag tag-green">✓ Completado</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">
+              <span>Miércoles — Piernas</span><span class="tag tag-orange">En curso</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0;border-bottom:1px solid var(--border);">
+              <span>Jueves — Hombros</span><span class="tag" style="color:var(--muted);background:var(--bg4);">Pendiente</span>
+            </div>
+            <div style="display:flex;justify-content:space-between;padding:8px 0;">
+              <span>Viernes — Full Body</span><span class="tag" style="color:var(--muted);background:var(--bg4);">Pendiente</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== NUTRICIÓN ========== -->
+    <div id="section-nutricion" class="section">
+
+      <div class="sub-tabs">
+        <div class="sub-tab active" onclick="showSubTab('nut','plan',this)">Plan de dieta</div>
+        <div class="sub-tab" onclick="showSubTab('nut','macros',this)">Requerimientos</div>
+        <div class="sub-tab" onclick="showSubTab('nut','ia',this)">✨ Generar con IA</div>
+      </div>
+
+      <!-- Plan de dieta -->
+      <div id="nut-plan" class="sub-section">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <div>
+            <p style="font-size:0.8rem;color:var(--muted);">Plan activo — Semana 1-4 · Déficit calórico</p>
+          </div>
+          <div style="display:flex;gap:8px;">
+            <button class="btn btn-outline btn-sm" onclick="addMeal()">+ Comida</button>
+            <button class="btn btn-primary btn-sm" onclick="savePlan()">Guardar plan</button>
+          </div>
+        </div>
+
+        <div id="meals-container">
+          <!-- COMIDA 1 -->
+          <div class="meal-block">
+            <div class="meal-block-header">
+              <div>
+                <div class="meal-block-name">🏋️ Post Entreno</div>
+                <div class="meal-block-macros">Kcal estimadas: 380 · P: 38g · C: 45g · G: 8g</div>
+              </div>
+              <div style="display:flex;gap:6px;">
+                <button class="btn btn-outline btn-sm" onclick="addFood(this)">+ Alimento</button>
+              </div>
+            </div>
+            <div class="meal-block-body">
+              <div class="food-row">
+                <div class="col-head">Alimento</div>
+                <div class="col-head">Gramos</div>
+                <div class="col-head">Kcal</div>
+                <div class="col-head">Proteína</div>
+                <div class="col-head">Carbos</div>
+                <div class="col-head">Grasas</div>
+                <div></div>
+              </div>
+              <div class="food-row">
+                <div><input type="text" value="Proteína whey" style="background:none;border:none;color:var(--text);font-size:0.8rem;width:100%;"></div>
+                <div><input type="number" value="15" style="background:none;border:none;color:var(--green);font-size:0.8rem;width:100%;"></div>
+                <div style="color:var(--muted)">60</div>
+                <div style="color:var(--muted)">12g</div>
+                <div style="color:var(--muted)">3g</div>
+                <div style="color:var(--muted)">1g</div>
+                <div><button class="btn btn-sm" style="background:none;border:none;color:var(--muted2);cursor:pointer;">✕</button></div>
+              </div>
+              <div class="food-row">
+                <div><input type="text" value="Avena en hojuelas" style="background:none;border:none;color:var(--text);font-size:0.8rem;width:100%;"></div>
+                <div><input type="number" value="60" style="background:none;border:none;color:var(--green);font-size:0.8rem;width:100%;"></div>
+                <div style="color:var(--muted)">216</div>
+                <div style="color:var(--muted)">7g</div>
+                <div style="color:var(--muted)">38g</div>
+                <div style="color:var(--muted)">4g</div>
+                <div><button class="btn btn-sm" style="background:none;border:none;color:var(--muted2);cursor:pointer;">✕</button></div>
+              </div>
+              <div class="food-row">
+                <div><input type="text" value="Banano mediano" style="background:none;border:none;color:var(--text);font-size:0.8rem;width:100%;"></div>
+                <div><input type="number" value="120" style="background:none;border:none;color:var(--green);font-size:0.8rem;width:100%;"></div>
+                <div style="color:var(--muted)">107</div>
+                <div style="color:var(--muted)">1g</div>
+                <div style="color:var(--muted)">27g</div>
+                <div style="color:var(--muted)">0g</div>
+                <div><button class="btn btn-sm" style="background:none;border:none;color:var(--muted2);cursor:pointer;">✕</button></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- COMIDA 2 -->
+          <div class="meal-block">
+            <div class="meal-block-header">
+              <div>
+                <div class="meal-block-name">🍳 Desayuno</div>
+                <div class="meal-block-macros">Kcal estimadas: 520 · P: 52g · C: 18g · G: 28g</div>
+              </div>
+              <div><button class="btn btn-outline btn-sm" onclick="addFood(this)">+ Alimento</button></div>
+            </div>
+            <div class="meal-block-body">
+              <div class="food-row">
+                <div class="col-head">Alimento</div><div class="col-head">Gramos</div><div class="col-head">Kcal</div><div class="col-head">Proteína</div><div class="col-head">Carbos</div><div class="col-head">Grasas</div><div></div>
+              </div>
+              <div class="food-row">
+                <div><input type="text" value="Huevos completos" style="background:none;border:none;color:var(--text);font-size:0.8rem;width:100%;"></div>
+                <div><input type="number" value="180" style="background:none;border:none;color:var(--green);font-size:0.8rem;width:100%;"></div>
+                <div style="color:var(--muted)">252</div><div style="color:var(--muted)">22g</div><div style="color:var(--muted)">2g</div><div style="color:var(--muted)">18g</div>
+                <div><button class="btn btn-sm" style="background:none;border:none;color:var(--muted2);cursor:pointer;">✕</button></div>
+              </div>
+              <div class="food-row">
+                <div><input type="text" value="Atún en lata" style="background:none;border:none;color:var(--text);font-size:0.8rem;width:100%;"></div>
+                <div><input type="number" value="150" style="background:none;border:none;color:var(--green);font-size:0.8rem;width:100%;"></div>
+                <div style="color:var(--muted)">165</div><div style="color:var(--muted)">36g</div><div style="color:var(--muted)">0g</div><div style="color:var(--muted)">2g</div>
+                <div><button class="btn btn-sm" style="background:none;border:none;color:var(--muted2);cursor:pointer;">✕</button></div>
+              </div>
+              <div class="food-row">
+                <div><input type="text" value="Maní" style="background:none;border:none;color:var(--text);font-size:0.8rem;width:100%;"></div>
+                <div><input type="number" value="20" style="background:none;border:none;color:var(--green);font-size:0.8rem;width:100%;"></div>
+                <div style="color:var(--muted)">113</div><div style="color:var(--muted)">5g</div><div style="color:var(--muted)">4g</div><div style="color:var(--muted)">10g</div>
+                <div><button class="btn btn-sm" style="background:none;border:none;color:var(--muted2);cursor:pointer;">✕</button></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- COMIDA 3 -->
+          <div class="meal-block">
+            <div class="meal-block-header">
+              <div>
+                <div class="meal-block-name">🍗 Almuerzo</div>
+                <div class="meal-block-macros">Kcal estimadas: 680 · P: 55g · C: 65g · G: 18g</div>
+              </div>
+              <div><button class="btn btn-outline btn-sm" onclick="addFood(this)">+ Alimento</button></div>
+            </div>
+            <div class="meal-block-body">
+              <div class="food-row">
+                <div class="col-head">Alimento</div><div class="col-head">Gramos</div><div class="col-head">Kcal</div><div class="col-head">Proteína</div><div class="col-head">Carbos</div><div class="col-head">Grasas</div><div></div>
+              </div>
+              <div class="food-row">
+                <div><input type="text" value="Pechuga de pollo (crudo)" style="background:none;border:none;color:var(--text);font-size:0.8rem;width:100%;"></div>
+                <div><input type="number" value="200" style="background:none;border:none;color:var(--green);font-size:0.8rem;width:100%;"></div>
+                <div style="color:var(--muted)">220</div><div style="color:var(--muted)">46g</div><div style="color:var(--muted)">0g</div><div style="color:var(--muted)">4g</div>
+                <div><button class="btn btn-sm" style="background:none;border:none;color:var(--muted2);cursor:pointer;">✕</button></div>
+              </div>
+              <div class="food-row">
+                <div><input type="text" value="Papa criolla (crudo)" style="background:none;border:none;color:var(--text);font-size:0.8rem;width:100%;"></div>
+                <div><input type="number" value="180" style="background:none;border:none;color:var(--green);font-size:0.8rem;width:100%;"></div>
+                <div style="color:var(--muted)">140</div><div style="color:var(--muted)">3g</div><div style="color:var(--muted)">32g</div><div style="color:var(--muted)">0g</div>
+                <div><button class="btn btn-sm" style="background:none;border:none;color:var(--muted2);cursor:pointer;">✕</button></div>
+              </div>
+              <div class="food-row">
+                <div><input type="text" value="Vegetales mixtos" style="background:none;border:none;color:var(--text);font-size:0.8rem;width:100%;"></div>
+                <div><input type="number" value="150" style="background:none;border:none;color:var(--green);font-size:0.8rem;width:100%;"></div>
+                <div style="color:var(--muted)">45</div><div style="color:var(--muted)">3g</div><div style="color:var(--muted)">9g</div><div style="color:var(--muted)">0g</div>
+                <div><button class="btn btn-sm" style="background:none;border:none;color:var(--muted2);cursor:pointer;">✕</button></div>
+              </div>
+              <div class="food-row">
+                <div><input type="text" value="Aceite de oliva" style="background:none;border:none;color:var(--text);font-size:0.8rem;width:100%;"></div>
+                <div><input type="number" value="10" style="background:none;border:none;color:var(--green);font-size:0.8rem;width:100%;"></div>
+                <div style="color:var(--muted)">90</div><div style="color:var(--muted)">0g</div><div style="color:var(--muted)">0g</div><div style="color:var(--muted)">10g</div>
+                <div><button class="btn btn-sm" style="background:none;border:none;color:var(--muted2);cursor:pointer;">✕</button></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- COMIDA 4 -->
+          <div class="meal-block">
+            <div class="meal-block-header">
+              <div>
+                <div class="meal-block-name">🌙 Cena</div>
+                <div class="meal-block-macros">Kcal estimadas: 420 · P: 50g · C: 5g · G: 18g</div>
+              </div>
+              <div><button class="btn btn-outline btn-sm" onclick="addFood(this)">+ Alimento</button></div>
+            </div>
+            <div class="meal-block-body">
+              <div class="food-row">
+                <div class="col-head">Alimento</div><div class="col-head">Gramos</div><div class="col-head">Kcal</div><div class="col-head">Proteína</div><div class="col-head">Carbos</div><div class="col-head">Grasas</div><div></div>
+              </div>
+              <div class="food-row">
+                <div><input type="text" value="Pechuga de pollo (crudo)" style="background:none;border:none;color:var(--text);font-size:0.8rem;width:100%;"></div>
+                <div><input type="number" value="160" style="background:none;border:none;color:var(--green);font-size:0.8rem;width:100%;"></div>
+                <div style="color:var(--muted)">176</div><div style="color:var(--muted)">37g</div><div style="color:var(--muted)">0g</div><div style="color:var(--muted)">3g</div>
+                <div><button class="btn btn-sm" style="background:none;border:none;color:var(--muted2);cursor:pointer;">✕</button></div>
+              </div>
+              <div class="food-row">
+                <div><input type="text" value="Huevos completos" style="background:none;border:none;color:var(--text);font-size:0.8rem;width:100%;"></div>
+                <div><input type="number" value="120" style="background:none;border:none;color:var(--green);font-size:0.8rem;width:100%;"></div>
+                <div style="color:var(--muted)">168</div><div style="color:var(--muted)">15g</div><div style="color:var(--muted)">1g</div><div style="color:var(--muted)">12g</div>
+                <div><button class="btn btn-sm" style="background:none;border:none;color:var(--muted2);cursor:pointer;">✕</button></div>
+              </div>
+              <div class="food-row">
+                <div><input type="text" value="Vegetales mixtos" style="background:none;border:none;color:var(--text);font-size:0.8rem;width:100%;"></div>
+                <div><input type="number" value="200" style="background:none;border:none;color:var(--green);font-size:0.8rem;width:100%;"></div>
+                <div style="color:var(--muted)">60</div><div style="color:var(--muted)">4g</div><div style="color:var(--muted)">12g</div><div style="color:var(--muted)">0g</div>
+                <div><button class="btn btn-sm" style="background:none;border:none;color:var(--muted2);cursor:pointer;">✕</button></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- TOTAL -->
+        <div class="card" style="border-color:var(--green);margin-top:4px;">
+          <div class="card-title" style="color:var(--green)"><div class="dot" style="background:var(--green)"></div>TOTAL DIARIO</div>
+          <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:12px;text-align:center;">
+            <div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:var(--green)">2,500</div><div style="font-size:0.7rem;color:var(--muted)">KCAL</div></div>
+            <div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:var(--blue)">195g</div><div style="font-size:0.7rem;color:var(--muted)">PROTEÍNA</div></div>
+            <div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:var(--yellow)">233g</div><div style="font-size:0.7rem;color:var(--muted)">CARBOS</div></div>
+            <div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:var(--orange)">72g</div><div style="font-size:0.7rem;color:var(--muted)">GRASAS</div></div>
+            <div><div style="font-family:'Bebas Neue',sans-serif;font-size:1.6rem;color:var(--purple)">28g</div><div style="font-size:0.7rem;color:var(--muted)">FIBRA</div></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Requerimientos -->
+      <div id="nut-macros" class="sub-section" style="display:none;">
+        <div class="grid-2">
+          <div class="card">
+            <div class="card-title"><div class="dot" style="background:var(--green)"></div>Cálculo de requerimientos</div>
+            <div class="form-row cols-2">
+              <div class="field"><label>Peso (kg)</label><input type="number" id="req-peso" value="90.4" oninput="calcReq()"></div>
+              <div class="field"><label>Talla (cm)</label><input type="number" id="req-talla" value="180" oninput="calcReq()"></div>
+              <div class="field"><label>Edad</label><input type="number" id="req-edad" value="22" oninput="calcReq()"></div>
+              <div class="field"><label>Sexo</label>
+                <select id="req-sexo" onchange="calcReq()">
+                  <option value="m">Masculino</option>
+                  <option value="f">Femenino</option>
+                </select>
+              </div>
+              <div class="field"><label>Nivel actividad</label>
+                <select id="req-act" onchange="calcReq()">
+                  <option value="1.2">Sedentario</option>
+                  <option value="1.375">Ligero</option>
+                  <option value="1.55">Moderado</option>
+                  <option value="1.725" selected>Activo (5-6d)</option>
+                  <option value="1.9">Muy activo</option>
+                </select>
+              </div>
+              <div class="field"><label>Objetivo</label>
+                <select id="req-obj" onchange="calcReq()">
+                  <option value="-0.2" selected>Pérdida de grasa (-20%)</option>
+                  <option value="-0.1">Déficit leve (-10%)</option>
+                  <option value="0">Mantenimiento</option>
+                  <option value="0.1">Superávit leve (+10%)</option>
+                  <option value="0.15">Ganancia muscular (+15%)</option>
+                </select>
+              </div>
+            </div>
+          </div>
+          <div class="card">
+            <div class="card-title"><div class="dot" style="background:var(--blue)"></div>Resultados calculados</div>
+            <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:14px;">
+              <div class="stat-card"><div class="stat-val" id="res-tmb" style="color:var(--muted)">—</div><div class="stat-label">TMB (kcal)</div></div>
+              <div class="stat-card"><div class="stat-val" id="res-tdee" style="color:var(--blue)">—</div><div class="stat-label">TDEE (kcal)</div></div>
+              <div class="stat-card"><div class="stat-val" id="res-obj" style="color:var(--green)">—</div><div class="stat-label">Objetivo (kcal)</div></div>
+              <div class="stat-card"><div class="stat-val" id="res-agua" style="color:var(--purple)">—</div><div class="stat-label">Agua (L/día)</div></div>
+            </div>
+            <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:8px;">
+              <div class="stat-card"><div class="stat-val" id="res-prot" style="color:var(--green);font-size:1.3rem">—</div><div class="stat-label">Proteína (g)</div></div>
+              <div class="stat-card"><div class="stat-val" id="res-carb" style="color:var(--yellow);font-size:1.3rem">—</div><div class="stat-label">Carbos (g)</div></div>
+              <div class="stat-card"><div class="stat-val" id="res-gras" style="color:var(--orange);font-size:1.3rem">—</div><div class="stat-label">Grasas (g)</div></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><div class="dot" style="background:var(--purple)"></div>Micronutrientes clave a monitorear</div>
+          <table class="data-table">
+            <thead><tr><th>Micronutriente</th><th>Importancia para este perfil</th><th>Fuentes en el plan</th><th>Dosis sugerida</th></tr></thead>
+            <tbody>
+              <tr><td>Vitamina D</td><td><span class="tag tag-red">Alta</span></td><td>Sol, huevos, atún</td><td>1000-2000 UI/día</td></tr>
+              <tr><td>Magnesio</td><td><span class="tag tag-red">Alta</span></td><td>Maní, avena, vegetales</td><td>350-400 mg/día</td></tr>
+              <tr><td>Zinc</td><td><span class="tag tag-orange">Media</span></td><td>Pollo, huevos, maní</td><td>11 mg/día</td></tr>
+              <tr><td>Vitamina C</td><td><span class="tag tag-orange">Media</span></td><td>Limón, vegetales</td><td>90 mg/día</td></tr>
+              <tr><td>Hierro</td><td><span class="tag tag-orange">Media</span></td><td>Atún, pollo, vegetales</td><td>8 mg/día</td></tr>
+              <tr><td>Omega-3</td><td><span class="tag tag-red">Alta</span></td><td>Atún (limitado), considerar supl.</td><td>1-3 g EPA+DHA</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Generar con IA -->
+      <div id="nut-ia" class="sub-section" style="display:none;">
+        <div class="card">
+          <div class="card-title"><div class="dot" style="background:var(--green)"></div>✨ Generar plan nutricional con IA</div>
+          <div class="form-row cols-2">
+            <div class="field"><label>Nombre del cliente</label><input type="text" id="ia-nombre" placeholder="Carlos Rodríguez"></div>
+            <div class="field"><label>Objetivo específico</label>
+              <select id="ia-objetivo">
+                <option>Pérdida de grasa</option>
+                <option>Ganancia muscular</option>
+                <option>Recomposición corporal</option>
+                <option>Mantenimiento</option>
+              </select>
+            </div>
+            <div class="field"><label>Alimentos que le gustan</label><input type="text" id="ia-gustan" placeholder="Pollo, huevos, arroz, atún..."></div>
+            <div class="field"><label>Alimentos que NO le gustan</label><input type="text" id="ia-nogustan" placeholder="Brócoli, hígado..."></div>
+          </div>
+          <div class="form-row">
+            <div class="field"><label>Observaciones adicionales</label><textarea id="ia-obs" placeholder="Presupuesto, horarios, condiciones especiales..."></textarea></div>
+          </div>
+          <div class="ai-loader" id="ai-loader-nut">
+            <div class="spinner"></div>
+            <span style="font-size:0.83rem;color:var(--green)">Generando plan nutricional personalizado...</span>
+          </div>
+          <button class="btn btn-ai" onclick="generateNutritionPlan()">✨ Generar plan con IA</button>
+          <div id="ia-result-nut" style="margin-top:16px;font-size:0.83rem;line-height:1.7;white-space:pre-wrap;display:none;background:var(--bg3);padding:16px;border-radius:var(--radius);border:1px solid var(--border2);"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== ENTRENAMIENTO ========== -->
+    <div id="section-entrenamiento" class="section">
+      <div class="sub-tabs">
+        <div class="sub-tab active" onclick="showSubTab('trn','rutina',this)">Rutina semanal</div>
+        <div class="sub-tab" onclick="showSubTab('trn','registrar',this)">Registrar sesión</div>
+        <div class="sub-tab" onclick="showSubTab('trn','ia',this)">✨ Generar con IA</div>
+      </div>
+
+      <div id="trn-rutina" class="sub-section">
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+          <p style="font-size:0.8rem;color:var(--muted)">Rutina activa — Hipertrofia / 5 días · Semana 3 de 4</p>
+          <button class="btn btn-outline btn-sm" onclick="addWorkoutDay()">+ Día</button>
+        </div>
+
+        <div style="display:grid;grid-template-columns:repeat(5,1fr);gap:10px;margin-bottom:16px;">
+          <div class="stat-card" style="cursor:pointer;border-color:var(--green)" onclick="showDay('lunes')">
+            <div style="font-size:0.7rem;color:var(--green);font-weight:500;margin-bottom:4px;">LUNES</div>
+            <div style="font-size:0.83rem;">Pecho / Tríceps</div>
+            <div style="font-size:0.7rem;color:var(--muted);margin-top:4px;">6 ejercicios</div>
+          </div>
+          <div class="stat-card" style="cursor:pointer" onclick="showDay('martes')">
+            <div style="font-size:0.7rem;color:var(--muted);font-weight:500;margin-bottom:4px;">MARTES</div>
+            <div style="font-size:0.83rem;">Espalda / Bíceps</div>
+            <div style="font-size:0.7rem;color:var(--muted);margin-top:4px;">6 ejercicios</div>
+          </div>
+          <div class="stat-card" style="cursor:pointer" onclick="showDay('miercoles')">
+            <div style="font-size:0.7rem;color:var(--muted);font-weight:500;margin-bottom:4px;">MIÉRCOLES</div>
+            <div style="font-size:0.83rem;">Piernas</div>
+            <div style="font-size:0.7rem;color:var(--muted);margin-top:4px;">7 ejercicios</div>
+          </div>
+          <div class="stat-card" style="cursor:pointer" onclick="showDay('jueves')">
+            <div style="font-size:0.7rem;color:var(--muted);font-weight:500;margin-bottom:4px;">JUEVES</div>
+            <div style="font-size:0.83rem;">Hombros / Traps</div>
+            <div style="font-size:0.7rem;color:var(--muted);margin-top:4px;">5 ejercicios</div>
+          </div>
+          <div class="stat-card" style="cursor:pointer" onclick="showDay('viernes')">
+            <div style="font-size:0.7rem;color:var(--muted);font-weight:500;margin-bottom:4px;">VIERNES</div>
+            <div style="font-size:0.83rem;">Full Body</div>
+            <div style="font-size:0.7rem;color:var(--muted);margin-top:4px;">8 ejercicios</div>
+          </div>
+        </div>
+
+        <div class="card">
+          <div class="card-title" id="day-title"><div class="dot" style="background:var(--green)"></div>Lunes — Pecho / Tríceps</div>
+          <div class="exercise-row">
+            <div class="col-head" style="font-size:0.68rem;color:var(--muted)">Ejercicio</div>
+            <div class="col-head" style="font-size:0.68rem;color:var(--muted)">Series</div>
+            <div class="col-head" style="font-size:0.68rem;color:var(--muted)">Reps</div>
+            <div class="col-head" style="font-size:0.68rem;color:var(--muted)">Carga</div>
+            <div class="col-head" style="font-size:0.68rem;color:var(--muted)">Descanso</div>
+            <div></div>
+          </div>
+          <div class="exercise-row">
+            <div><input type="text" value="Press banca plano" style="background:none;border:none;color:var(--text);font-size:0.83rem;width:100%;"></div>
+            <div><input type="number" value="4" style="background:none;border:none;color:var(--green);font-size:0.83rem;width:40px;"></div>
+            <div><input type="text" value="8-10" style="background:none;border:none;color:var(--muted);font-size:0.83rem;width:60px;"></div>
+            <div><input type="text" value="70 kg" style="background:none;border:none;color:var(--orange);font-size:0.83rem;width:70px;"></div>
+            <div><input type="text" value="90s" style="background:none;border:none;color:var(--muted);font-size:0.83rem;width:60px;"></div>
+            <div><button style="background:none;border:none;color:var(--muted2);cursor:pointer;font-size:0.8rem;">✕</button></div>
+          </div>
+          <div class="exercise-row">
+            <div><input type="text" value="Press inclinado mancuernas" style="background:none;border:none;color:var(--text);font-size:0.83rem;width:100%;"></div>
+            <div><input type="number" value="3" style="background:none;border:none;color:var(--green);font-size:0.83rem;width:40px;"></div>
+            <div><input type="text" value="10-12" style="background:none;border:none;color:var(--muted);font-size:0.83rem;width:60px;"></div>
+            <div><input type="text" value="24 kg" style="background:none;border:none;color:var(--orange);font-size:0.83rem;width:70px;"></div>
+            <div><input type="text" value="75s" style="background:none;border:none;color:var(--muted);font-size:0.83rem;width:60px;"></div>
+            <div><button style="background:none;border:none;color:var(--muted2);cursor:pointer;font-size:0.8rem;">✕</button></div>
+          </div>
+          <div class="exercise-row">
+            <div><input type="text" value="Aperturas en polea" style="background:none;border:none;color:var(--text);font-size:0.83rem;width:100%;"></div>
+            <div><input type="number" value="3" style="background:none;border:none;color:var(--green);font-size:0.83rem;width:40px;"></div>
+            <div><input type="text" value="12-15" style="background:none;border:none;color:var(--muted);font-size:0.83rem;width:60px;"></div>
+            <div><input type="text" value="15 kg" style="background:none;border:none;color:var(--orange);font-size:0.83rem;width:70px;"></div>
+            <div><input type="text" value="60s" style="background:none;border:none;color:var(--muted);font-size:0.83rem;width:60px;"></div>
+            <div><button style="background:none;border:none;color:var(--muted2);cursor:pointer;font-size:0.8rem;">✕</button></div>
+          </div>
+          <div class="exercise-row">
+            <div><input type="text" value="Press francés" style="background:none;border:none;color:var(--text);font-size:0.83rem;width:100%;"></div>
+            <div><input type="number" value="3" style="background:none;border:none;color:var(--green);font-size:0.83rem;width:40px;"></div>
+            <div><input type="text" value="10-12" style="background:none;border:none;color:var(--muted);font-size:0.83rem;width:60px;"></div>
+            <div><input type="text" value="30 kg" style="background:none;border:none;color:var(--orange);font-size:0.83rem;width:70px;"></div>
+            <div><input type="text" value="75s" style="background:none;border:none;color:var(--muted);font-size:0.83rem;width:60px;"></div>
+            <div><button style="background:none;border:none;color:var(--muted2);cursor:pointer;font-size:0.8rem;">✕</button></div>
+          </div>
+          <div style="margin-top:10px;">
+            <button class="btn btn-outline btn-sm" onclick="addExercise()">+ Ejercicio</button>
+          </div>
+        </div>
+      </div>
+
+      <div id="trn-registrar" class="sub-section" style="display:none;">
+        <div class="card">
+          <div class="card-title"><div class="dot" style="background:var(--orange)"></div>Registrar sesión de hoy</div>
+          <div class="form-row cols-3">
+            <div class="field"><label>Fecha</label><input type="date" id="sess-fecha"></div>
+            <div class="field"><label>Duración (min)</label><input type="number" id="sess-dur" placeholder="60"></div>
+            <div class="field"><label>Tipo</label>
+              <select><option>Musculación</option><option>Cardio</option><option>Mixto</option></select>
+            </div>
+          </div>
+          <div class="field" style="margin-bottom:12px;"><label>Notas de la sesión</label>
+            <textarea placeholder="Cómo se sintió el cliente, mejoras en cargas, observaciones..."></textarea>
+          </div>
+          <button class="btn btn-primary" onclick="saveSesion()">Guardar sesión</button>
+        </div>
+        <div class="card" style="margin-top:14px;">
+          <div class="card-title"><div class="dot" style="background:var(--blue)"></div>Historial de sesiones</div>
+          <table class="data-table">
+            <thead><tr><th>Fecha</th><th>Tipo</th><th>Duración</th><th>Notas</th></tr></thead>
+            <tbody>
+              <tr><td>08 May 2026</td><td><span class="tag tag-green">Musculación</span></td><td>65 min</td><td>Aumentó 5kg en press banca</td></tr>
+              <tr><td>07 May 2026</td><td><span class="tag tag-blue">Cardio</span></td><td>35 min</td><td>LISS en cinta, FC ~130</td></tr>
+              <tr><td>05 May 2026</td><td><span class="tag tag-green">Musculación</span></td><td>70 min</td><td>Piernas — sentadilla 80kg</td></tr>
+              <tr><td>03 May 2026</td><td><span class="tag tag-green">Musculación</span></td><td>60 min</td><td>Espalda — peso muerto 90kg</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="trn-ia" class="sub-section" style="display:none;">
+        <div class="card">
+          <div class="card-title"><div class="dot" style="background:var(--green)"></div>✨ Generar rutina con IA</div>
+          <div class="form-row cols-2">
+            <div class="field"><label>Días de entrenamiento/semana</label>
+              <select id="trn-dias"><option>3</option><option>4</option><option value="5" selected>5</option><option>6</option></select>
+            </div>
+            <div class="field"><label>Objetivo</label>
+              <select id="trn-obj"><option>Hipertrofia</option><option>Fuerza</option><option>Resistencia</option><option>Pérdida de grasa</option></select>
+            </div>
+            <div class="field"><label>Nivel</label>
+              <select id="trn-nivel"><option>Principiante</option><option selected>Intermedio</option><option>Avanzado</option></select>
+            </div>
+            <div class="field"><label>Equipamiento disponible</label>
+              <select id="trn-equip"><option selected>Gimnasio completo</option><option>Mancuernas y barra</option><option>Solo peso corporal</option></select>
+            </div>
+          </div>
+          <div class="field" style="margin-bottom:12px;"><label>Limitaciones físicas o lesiones</label>
+            <input type="text" id="trn-lesiones" placeholder="Ninguna / lumbar, rodilla...">
+          </div>
+          <div class="ai-loader" id="ai-loader-trn">
+            <div class="spinner"></div>
+            <span style="font-size:0.83rem;color:var(--green)">Diseñando rutina personalizada...</span>
+          </div>
+          <button class="btn btn-ai" onclick="generateWorkout()">✨ Generar rutina con IA</button>
+          <div id="ia-result-trn" style="margin-top:16px;font-size:0.83rem;line-height:1.7;white-space:pre-wrap;display:none;background:var(--bg3);padding:16px;border-radius:var(--radius);border:1px solid var(--border2);"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== PERIODIZACIÓN ========== -->
+    <div id="section-periodizacion" class="section">
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-title"><div class="dot" style="background:var(--purple)"></div>Plan de periodización — 3 meses (12 semanas)</div>
+        <div style="overflow-x:auto;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Fase</th><th>Semanas</th><th>Enfoque</th><th>Calorías</th><th>Proteína</th>
+                <th>Volumen entreno</th><th>Cardio</th><th>Estado</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><strong>Fase 1</strong><br><span style="font-size:0.7rem;color:var(--muted)">Adaptación</span></td>
+                <td>1 – 3</td>
+                <td><span class="tag tag-blue">Acondicionamiento</span></td>
+                <td>2,500 kcal</td><td>195g/día</td>
+                <td>Moderado (12-15 series/músculo)</td>
+                <td>3x/sem 20min LISS</td>
+                <td><span class="tag tag-green">Completada</span></td>
+              </tr>
+              <tr>
+                <td><strong>Fase 2</strong><br><span style="font-size:0.7rem;color:var(--muted)">Déficit activo</span></td>
+                <td>4 – 8</td>
+                <td><span class="tag tag-orange">Pérdida de grasa</span></td>
+                <td>2,300 kcal</td><td>200g/día</td>
+                <td>Alto (16-20 series/músculo)</td>
+                <td>4x/sem 30min mixto</td>
+                <td><span class="tag tag-orange">En curso</span></td>
+              </tr>
+              <tr>
+                <td><strong>Fase 3</strong><br><span style="font-size:0.7rem;color:var(--muted)">Definición</span></td>
+                <td>9 – 11</td>
+                <td><span class="tag tag-purple">Definición</span></td>
+                <td>2,150 kcal</td><td>210g/día</td>
+                <td>Moderado (mantenimiento)</td>
+                <td>5x/sem 35min mixto</td>
+                <td><span class="tag" style="color:var(--muted);background:var(--bg4)">Pendiente</span></td>
+              </tr>
+              <tr>
+                <td><strong>Fase 4</strong><br><span style="font-size:0.7rem;color:var(--muted)">Peak</span></td>
+                <td>12</td>
+                <td><span class="tag tag-red">Peak semana</span></td>
+                <td>2,000 kcal</td><td>215g/día</td>
+                <td>Bajo (deload)</td>
+                <td>Diaria 20min suave</td>
+                <td><span class="tag" style="color:var(--muted);background:var(--bg4)">Pendiente</span></td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title"><div class="dot" style="background:var(--green)"></div>Semana actual — Semana 6</div>
+          <div style="margin-bottom:12px;">
+            <div style="display:flex;justify-content:space-between;font-size:0.8rem;margin-bottom:4px;"><span>Progreso del reto</span><span style="color:var(--green)">50% (6/12 sem)</span></div>
+            <div class="progress-bar-wrap"><div class="progress-bar-fill" style="width:50%"></div></div>
+          </div>
+          <div style="font-size:0.8rem;color:var(--muted);line-height:1.8;">
+            <div>🎯 Objetivo semana: Mantener déficit 200 kcal</div>
+            <div>💪 Volumen: 18 series por grupo muscular</div>
+            <div>🏃 Cardio: 4 sesiones × 30 min</div>
+            <div>⚖️ Pesar el viernes en ayunas</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><div class="dot" style="background:var(--blue)"></div>✨ Generar periodización con IA</div>
+          <div class="field" style="margin-bottom:10px;"><label>Duración del programa (semanas)</label>
+            <select id="per-dur"><option>8</option><option selected>12</option><option>16</option><option>24</option></select>
+          </div>
+          <div class="field" style="margin-bottom:10px;"><label>Objetivo final</label>
+            <select id="per-obj"><option selected>Pérdida de grasa máxima</option><option>Ganancia muscular</option><option>Competencia/evento</option></select>
+          </div>
+          <div class="ai-loader" id="ai-loader-per">
+            <div class="spinner"></div>
+            <span style="font-size:0.83rem;color:var(--green)">Diseñando periodización...</span>
+          </div>
+          <button class="btn btn-ai" style="width:100%;margin-top:8px;" onclick="generatePeriodization()">✨ Generar periodización con IA</button>
+          <div id="ia-result-per" style="margin-top:12px;font-size:0.8rem;line-height:1.7;white-space:pre-wrap;display:none;background:var(--bg3);padding:12px;border-radius:var(--radius);border:1px solid var(--border2);max-height:300px;overflow-y:auto;"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== PROGRESOS ========== -->
+    <div id="section-progresos" class="section">
+      <div class="sub-tabs">
+        <div class="sub-tab active" onclick="showSubTab('prg','peso',this)">Peso corporal</div>
+        <div class="sub-tab" onclick="showSubTab('prg','medidas',this)">Medidas antropométricas</div>
+        <div class="sub-tab" onclick="showSubTab('prg','registro',this)">Registrar medición</div>
+      </div>
+
+      <div id="prg-peso" class="sub-section">
+        <div class="grid-4" style="margin-bottom:16px;">
+          <div class="stat-card"><div class="stat-val" style="color:var(--muted)">91.6</div><div class="stat-label">Peso inicial (kg)</div></div>
+          <div class="stat-card"><div class="stat-val" style="color:var(--green)">90.4</div><div class="stat-label">Peso actual (kg)</div></div>
+          <div class="stat-card"><div class="stat-val" style="color:var(--blue)">-1.2</div><div class="stat-label">Cambio total (kg)</div></div>
+          <div class="stat-card"><div class="stat-val" style="color:var(--orange)">85</div><div class="stat-label">Meta (kg)</div></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><div class="dot" style="background:var(--green)"></div>Evolución de peso</div>
+          <div class="chart-wrap" style="height:250px;"><canvas id="chart-peso-full"></canvas></div>
+        </div>
+        <div class="card" style="margin-top:14px;">
+          <div class="card-title"><div class="dot" style="background:var(--blue)"></div>Historial de pesajes</div>
+          <table class="data-table">
+            <thead><tr><th>Fecha</th><th>Peso (kg)</th><th>% Grasa</th><th>Masa magra (kg)</th><th>Cambio</th><th>Notas</th></tr></thead>
+            <tbody>
+              <tr><td>02 Abr 2026</td><td>91.6</td><td>23.5%</td><td>70.1</td><td>— Inicio</td><td>Medición inicial</td></tr>
+              <tr><td>09 Abr 2026</td><td>91.1</td><td>23.2%</td><td>70.0</td><td><span class="delta-neg">▼ 0.5</span></td><td>Buena adherencia</td></tr>
+              <tr><td>16 Abr 2026</td><td>90.8</td><td>22.9%</td><td>70.0</td><td><span class="delta-neg">▼ 0.3</span></td><td></td></tr>
+              <tr><td>23 Abr 2026</td><td>90.9</td><td>22.8%</td><td>70.2</td><td><span class="delta-pos">▲ 0.1</span></td><td>Retención hídrica</td></tr>
+              <tr><td>30 Abr 2026</td><td>90.5</td><td>22.5%</td><td>70.1</td><td><span class="delta-neg">▼ 0.4</span></td><td></td></tr>
+              <tr><td>07 May 2026</td><td>90.4</td><td>22.0%</td><td>70.5</td><td><span class="delta-neg">▼ 0.1</span></td><td>Buena semana</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <div id="prg-medidas" class="sub-section" style="display:none;">
+        <div class="card" style="margin-bottom:14px;">
+          <div class="card-title"><div class="dot" style="background:var(--orange)"></div>Evolución de medidas (cm)</div>
+          <div class="chart-wrap" style="height:250px;"><canvas id="chart-medidas"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title"><div class="dot" style="background:var(--purple)"></div>Tabla de medidas antropométricas</div>
+          <table class="data-table">
+            <thead>
+              <tr><th>Fecha</th><th>Cintura</th><th>Cadera</th><th>Pecho</th><th>Brazo D</th><th>Muslo D</th><th>Pantorrilla</th></tr>
+            </thead>
+            <tbody>
+              <tr><td>02 Abr</td><td>85</td><td>98</td><td>102</td><td>36</td><td>58</td><td>37</td></tr>
+              <tr><td>16 Abr</td><td>84</td><td>97.5</td><td>101.5</td><td>36.5</td><td>57.5</td><td>37</td></tr>
+              <tr><td>30 Abr</td><td>83</td><td>97</td><td>101</td><td>37</td><td>57</td><td>37.2</td></tr>
+              <tr style="color:var(--green);font-weight:500;"><td>07 May</td><td>82</td><td>96.5</td><td>100.5</td><td>37.5</td><td>56.5</td><td>37.5</td></tr>
+            </tbody>
+          </table>
+          <div style="display:flex;gap:8px;margin-top:12px;font-size:0.78rem;color:var(--muted);">
+            <span>Cintura: <span class="delta-neg">▼ 3 cm</span></span>
+            <span>·</span>
+            <span>Cadera: <span class="delta-neg">▼ 1.5 cm</span></span>
+            <span>·</span>
+            <span>Brazo: <span class="delta-pos">▲ 1.5 cm</span></span>
+          </div>
+        </div>
+      </div>
+
+      <div id="prg-registro" class="sub-section" style="display:none;">
+        <div class="card">
+          <div class="card-title"><div class="dot" style="background:var(--green)"></div>Nueva medición</div>
+          <div class="form-row cols-2">
+            <div class="field"><label>Fecha de medición</label><input type="date" id="med-fecha"></div>
+            <div class="field"><label>Peso (kg)</label><input type="number" id="med-peso" step="0.1" placeholder="90.4"></div>
+            <div class="field"><label>% Grasa corporal</label><input type="number" id="med-grasa" step="0.1" placeholder="22"></div>
+            <div class="field"><label>Cintura (cm)</label><input type="number" id="med-cintura" step="0.5" placeholder="82"></div>
+            <div class="field"><label>Cadera (cm)</label><input type="number" id="med-cadera" step="0.5" placeholder="96.5"></div>
+            <div class="field"><label>Pecho (cm)</label><input type="number" id="med-pecho" step="0.5" placeholder="100.5"></div>
+            <div class="field"><label>Brazo derecho (cm)</label><input type="number" id="med-brazo" step="0.5" placeholder="37.5"></div>
+            <div class="field"><label>Muslo derecho (cm)</label><input type="number" id="med-muslo" step="0.5" placeholder="56.5"></div>
+            <div class="field"><label>Pantorrilla (cm)</label><input type="number" id="med-panto" step="0.5" placeholder="37.5"></div>
+            <div class="field"><label>IMC (auto)</label><input type="text" id="med-imc" readonly placeholder="Se calcula automático" style="color:var(--muted)"></div>
+          </div>
+          <div class="field" style="margin-bottom:14px;"><label>Notas / observaciones</label>
+            <textarea placeholder="Observaciones del asesor sobre esta medición..."></textarea>
+          </div>
+          <button class="btn btn-primary" onclick="saveMedicion()">Guardar medición</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== FOTOS ========== -->
+    <div id="section-fotos" class="section">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:16px;">
+        <div>
+          <p style="font-size:0.8rem;color:var(--muted)">Progreso fotográfico — Frente · Lateral · Espalda</p>
+        </div>
+        <button class="btn btn-primary btn-sm" onclick="addPhotoSet()">+ Agregar fotos</button>
+      </div>
+
+      <!-- Comparativa antes/después -->
+      <div class="card" style="margin-bottom:16px;">
+        <div class="card-title"><div class="dot" style="background:var(--green)"></div>Comparativa inicio vs actual</div>
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px;">
+          <div>
+            <p style="font-size:0.72rem;color:var(--muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">Inicio — 02 Abril 2026</p>
+            <div class="photo-grid">
+              <div class="photo-slot" onclick="uploadPhoto(this,'inicio-frente')">
+                <div class="photo-add-icon">📷</div>
+                <div class="photo-add-text">Frente</div>
+              </div>
+              <div class="photo-slot" onclick="uploadPhoto(this,'inicio-lateral')">
+                <div class="photo-add-icon">📷</div>
+                <div class="photo-add-text">Lateral</div>
+              </div>
+              <div class="photo-slot" onclick="uploadPhoto(this,'inicio-espalda')">
+                <div class="photo-add-icon">📷</div>
+                <div class="photo-add-text">Espalda</div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <p style="font-size:0.72rem;color:var(--green);margin-bottom:8px;text-transform:uppercase;letter-spacing:1px;">Actual — 10 Mayo 2026</p>
+            <div class="photo-grid">
+              <div class="photo-slot" onclick="uploadPhoto(this,'actual-frente')">
+                <div class="photo-add-icon">📷</div>
+                <div class="photo-add-text">Frente</div>
+              </div>
+              <div class="photo-slot" onclick="uploadPhoto(this,'actual-lateral')">
+                <div class="photo-add-icon">📷</div>
+                <div class="photo-add-text">Lateral</div>
+              </div>
+              <div class="photo-slot" onclick="uploadPhoto(this,'actual-espalda')">
+                <div class="photo-add-icon">📷</div>
+                <div class="photo-add-text">Espalda</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Historial de fotos -->
+      <div class="card">
+        <div class="card-title"><div class="dot" style="background:var(--blue)"></div>Historial fotográfico</div>
+        <div id="photo-history">
+          <div style="margin-bottom:20px;">
+            <p style="font-size:0.78rem;color:var(--muted);margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:8px;">Semana 5 — 30 Abril 2026</p>
+            <div class="photo-grid" style="grid-template-columns:repeat(3,100px);">
+              <div class="photo-slot" onclick="uploadPhoto(this,'sem5-frente')">
+                <div class="photo-add-icon">📷</div>
+                <div class="photo-add-text">Frente</div>
+              </div>
+              <div class="photo-slot" onclick="uploadPhoto(this,'sem5-lateral')">
+                <div class="photo-add-icon">📷</div>
+                <div class="photo-add-text">Lateral</div>
+              </div>
+              <div class="photo-slot" onclick="uploadPhoto(this,'sem5-espalda')">
+                <div class="photo-add-icon">📷</div>
+                <div class="photo-add-text">Espalda</div>
+              </div>
+            </div>
+          </div>
+          <div>
+            <p style="font-size:0.78rem;color:var(--muted);margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:8px;">Semana 3 — 16 Abril 2026</p>
+            <div class="photo-grid" style="grid-template-columns:repeat(3,100px);">
+              <div class="photo-slot" onclick="uploadPhoto(this,'sem3-frente')">
+                <div class="photo-add-icon">📷</div>
+                <div class="photo-add-text">Frente</div>
+              </div>
+              <div class="photo-slot" onclick="uploadPhoto(this,'sem3-lateral')">
+                <div class="photo-add-icon">📷</div>
+                <div class="photo-add-text">Lateral</div>
+              </div>
+              <div class="photo-slot" onclick="uploadPhoto(this,'sem3-espalda')">
+                <div class="photo-add-icon">📷</div>
+                <div class="photo-add-text">Espalda</div>
+              </div>
+            </div>
+          </div>
+        </div>
+        <button class="btn btn-outline btn-sm" style="margin-top:14px;" onclick="addHistoryWeek()">+ Agregar semana</button>
+      </div>
+    </div>
+
+    <!-- ========== ANAMNESIS ========== -->
+    <div id="section-anamnesis" class="section">
+      <div class="grid-2">
+        <div class="card">
+          <div class="card-title"><div class="dot" style="background:var(--green)"></div>Datos personales</div>
+          <div class="form-row cols-2">
+            <div class="field"><label>Nombre completo</label><input type="text" value="Carlos Rodríguez"></div>
+            <div class="field"><label>Fecha de nacimiento</label><input type="date" value="2002-03-15"></div>
+            <div class="field"><label>Peso inicial (kg)</label><input type="number" value="91.6" step="0.1"></div>
+            <div class="field"><label>Talla (cm)</label><input type="number" value="180"></div>
+            <div class="field"><label>Sexo</label><select><option selected>Masculino</option><option>Femenino</option></select></div>
+            <div class="field"><label>Ocupación</label><input type="text" value="Estudiante"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><div class="dot" style="background:var(--blue)"></div>Actividad y objetivo</div>
+          <div class="form-row cols-2">
+            <div class="field"><label>Nivel de actividad</label>
+              <select><option selected>Activo (5-6 días)</option></select>
+            </div>
+            <div class="field"><label>Objetivo principal</label>
+              <select><option selected>Pérdida de grasa</option></select>
+            </div>
+            <div class="field"><label>Tipo de entrenamiento</label>
+              <select><option selected>Musculación / pesas</option></select>
+            </div>
+            <div class="field"><label>Días/semana entrena</label>
+              <select><option selected>5</option><option>6</option></select>
+            </div>
+            <div class="field"><label>Duración reto</label><input type="text" value="3 meses (90 días)"></div>
+            <div class="field"><label>Fecha inicio</label><input type="date" value="2026-04-02"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><div class="dot" style="background:var(--red)"></div>Historial de salud</div>
+          <div class="form-row">
+            <div class="field"><label>Patologías / condiciones médicas</label><input type="text" value="Ninguna"></div>
+            <div class="field"><label>Alergias o intolerancias alimentarias</label><input type="text" value="Ninguna"></div>
+            <div class="field"><label>Medicamentos actuales</label><input type="text" value="Ninguno"></div>
+            <div class="field"><label>Lesiones activas</label><input type="text" value="Ninguna"></div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title"><div class="dot" style="background:var(--yellow)"></div>Preferencias alimentarias</div>
+          <div class="form-row">
+            <div class="field"><label>Tipo de alimentación</label><select><option selected>Omnívora</option></select></div>
+            <div class="field"><label>Alimentos que le gustan</label>
+              <textarea style="height:64px;">Pollo, huevos, atún, arroz, papa criolla, avena, maní, banano, yogur griego</textarea>
+            </div>
+            <div class="field"><label>Alimentos que NO le gustan</label>
+              <textarea style="height:48px;">No reportados</textarea>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div style="margin-top:14px;text-align:right;">
+        <button class="btn btn-primary" onclick="saveAnamnesis()">Guardar anamnesis</button>
+      </div>
+    </div>
+
+  </div><!-- /content -->
+</main>
+</div><!-- /layout -->
+
+<!-- MODAL NUEVO CLIENTE -->
+<div class="modal-overlay" id="modal-nuevo-cliente">
+  <div class="modal">
+    <div class="modal-header">
+      <div class="modal-title">Nuevo cliente</div>
+      <button class="modal-close" onclick="closeModal('modal-nuevo-cliente')">✕</button>
+    </div>
+    <div class="form-row cols-2">
+      <div class="field"><label>Nombre completo</label><input type="text" id="nc-nombre" placeholder="Nombre Apellido"></div>
+      <div class="field"><label>Edad</label><input type="number" id="nc-edad" placeholder="25"></div>
+      <div class="field"><label>Peso (kg)</label><input type="number" id="nc-peso" step="0.1" placeholder="75"></div>
+      <div class="field"><label>Talla (cm)</label><input type="number" id="nc-talla" placeholder="170"></div>
+      <div class="field"><label>Sexo</label><select id="nc-sexo"><option>Masculino</option><option>Femenino</option></select></div>
+      <div class="field"><label>Objetivo</label>
+        <select id="nc-obj">
+          <option>Pérdida de grasa</option>
+          <option>Ganancia muscular</option>
+          <option>Recomposición corporal</option>
+          <option>Mantenimiento</option>
+        </select>
+      </div>
+    </div>
+    <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:16px;">
+      <button class="btn btn-outline" onclick="closeModal('modal-nuevo-cliente')">Cancelar</button>
+      <button class="btn btn-primary" onclick="createClient()">Crear cliente</button>
+    </div>
+  </div>
+</div>
+
+<script>
+// ——— NAVEGACIÓN ———
+function showSection(id, el) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-item').forEach(n => n.classList.remove('active'));
+  document.getElementById('section-'+id).classList.add('active');
+  el.classList.add('active');
+  const titles = {
+    dashboard:'Dashboard', nutricion:'Nutrición', entrenamiento:'Entrenamiento',
+    periodizacion:'Periodización', progresos:'Progresos', fotos:'Progreso fotográfico', anamnesis:'Anamnesis'
+  };
+  document.getElementById('section-title').textContent = titles[id] || id;
+  if (id === 'progresos') setTimeout(initProgressCharts, 100);
+}
+
+function showSubTab(prefix, id, el) {
+  document.querySelectorAll(`[id^="${prefix}-"]`).forEach(s => {
+    if (s.classList.contains('sub-section')) s.style.display = 'none';
+  });
+  document.querySelectorAll('.sub-tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(prefix+'-'+id).style.display = 'block';
+  el.classList.add('active');
+  if (prefix === 'nut' && id === 'macros') setTimeout(calcReq, 100);
+  if (prefix === 'prg' && id === 'medidas') setTimeout(initMedidasChart, 100);
+}
+
+// ——— CLIENTES ———
+const clients = ['Carlos Rodríguez','María López'];
+function switchClient(val) {
+  if (val === '2') { openNewClientModal(); return; }
+  document.getElementById('client-name-badge').textContent = clients[val] || 'Carlos Rodríguez';
+}
+function openNewClientModal() { document.getElementById('modal-nuevo-cliente').classList.add('open'); }
+function closeModal(id) { document.getElementById(id).classList.remove('open'); }
+function createClient() {
+  const n = document.getElementById('nc-nombre').value.trim();
+  if (!n) return;
+  clients.push(n);
+  const sel = document.getElementById('client-select');
+  const opt = document.createElement('option');
+  opt.value = clients.length - 1; opt.textContent = n;
+  sel.insertBefore(opt, sel.lastElementChild);
+  sel.value = clients.length - 1;
+  document.getElementById('client-name-badge').textContent = n;
+  closeModal('modal-nuevo-cliente');
+}
+
+// ——— CALCULADORA NUTRICIONAL ———
+function calcReq() {
+  const p = parseFloat(document.getElementById('req-peso').value) || 90.4;
+  const t = parseFloat(document.getElementById('req-talla').value) || 180;
+  const e = parseFloat(document.getElementById('req-edad').value) || 22;
+  const s = document.getElementById('req-sexo').value;
+  const a = parseFloat(document.getElementById('req-act').value) || 1.725;
+  const o = parseFloat(document.getElementById('req-obj').value);
+  const tmb = s === 'm' ? Math.round(10*p + 6.25*t - 5*e + 5) : Math.round(10*p + 6.25*t - 5*e - 161);
+  const tdee = Math.round(tmb * a);
+  const obj = Math.round(tdee * (1 + o));
+  const prot = Math.round(p * 2.0);
+  const gras = Math.round(p * 0.8);
+  const carb = Math.round(Math.max(obj - prot*4 - gras*9, 0) / 4);
+  const agua = (p * 0.035).toFixed(1);
+  document.getElementById('res-tmb').textContent = tmb;
+  document.getElementById('res-tdee').textContent = tdee;
+  document.getElementById('res-obj').textContent = obj;
+  document.getElementById('res-agua').textContent = agua + 'L';
+  document.getElementById('res-prot').textContent = prot + 'g';
+  document.getElementById('res-carb').textContent = carb + 'g';
+  document.getElementById('res-gras').textContent = gras + 'g';
+}
+
+// IMC auto
+document.getElementById('med-peso')?.addEventListener('input', () => {
+  const p = parseFloat(document.getElementById('med-peso').value);
+  const t = 1.80;
+  if (p) document.getElementById('med-imc').value = (p / (t*t)).toFixed(1);
+});
+
+// ——— CHARTS DASHBOARD ———
+window.addEventListener('load', () => {
+  calcReq();
+
+  const cPeso = document.getElementById('chart-peso')?.getContext('2d');
+  if (cPeso) new Chart(cPeso, {
+    type:'line',
+    data:{
+      labels:['Sem 1','Sem 2','Sem 3','Sem 4','Sem 5','Sem 6'],
+      datasets:[{
+        label:'Peso (kg)', data:[91.6,91.1,90.8,90.9,90.5,90.4],
+        borderColor:'#b5f23d', backgroundColor:'rgba(181,242,61,0.08)',
+        tension:0.4, fill:true, pointBackgroundColor:'#b5f23d', pointRadius:4,
+      }]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{display:false}},
+      scales:{x:{grid:{color:'#2e2e2e'},ticks:{color:'#888',font:{size:11}}},
+        y:{grid:{color:'#2e2e2e'},ticks:{color:'#888',font:{size:11}},min:89,max:93}}}
+  });
+
+  const cAdh = document.getElementById('chart-adherencia')?.getContext('2d');
+  if (cAdh) new Chart(cAdh, {
+    type:'bar',
+    data:{
+      labels:['Sem 1','Sem 2','Sem 3','Sem 4','Sem 5','Sem 6'],
+      datasets:[
+        {label:'Dieta %', data:[95,88,92,85,90,97], backgroundColor:'rgba(181,242,61,0.7)', borderRadius:4},
+        {label:'Entreno %', data:[100,100,80,100,100,100], backgroundColor:'rgba(77,166,255,0.5)', borderRadius:4}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#888',font:{size:11}}}},
+      scales:{x:{grid:{color:'#2e2e2e'},ticks:{color:'#888',font:{size:11}}},
+        y:{grid:{color:'#2e2e2e'},ticks:{color:'#888',font:{size:11}},min:0,max:100}}}
+  });
+});
+
+function initProgressCharts() {
+  const el = document.getElementById('chart-peso-full');
+  if (!el || el.dataset.init) return;
+  el.dataset.init = '1';
+  new Chart(el.getContext('2d'), {
+    type:'line',
+    data:{
+      labels:['02 Abr','09 Abr','16 Abr','23 Abr','30 Abr','07 May'],
+      datasets:[
+        {label:'Peso real (kg)', data:[91.6,91.1,90.8,90.9,90.5,90.4], borderColor:'#b5f23d', backgroundColor:'rgba(181,242,61,0.06)', tension:0.4, fill:true, pointRadius:5},
+        {label:'Tendencia', data:[91.6,91.3,91.0,90.7,90.4,90.1], borderColor:'rgba(181,242,61,0.3)', borderDash:[6,3], tension:0.4, pointRadius:0}
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#888',font:{size:11}}}},
+      scales:{x:{grid:{color:'#2e2e2e'},ticks:{color:'#888',font:{size:11}}},
+        y:{grid:{color:'#2e2e2e'},ticks:{color:'#888',font:{size:11}},min:89,max:93}}}
+  });
+}
+
+function initMedidasChart() {
+  const el = document.getElementById('chart-medidas');
+  if (!el || el.dataset.init) return;
+  el.dataset.init = '1';
+  new Chart(el.getContext('2d'), {
+    type:'line',
+    data:{
+      labels:['02 Abr','16 Abr','30 Abr','07 May'],
+      datasets:[
+        {label:'Cintura', data:[85,84,83,82], borderColor:'#ff5757', tension:0.4, pointRadius:4},
+        {label:'Cadera', data:[98,97.5,97,96.5], borderColor:'#ffd166', tension:0.4, pointRadius:4},
+        {label:'Brazo D', data:[36,36.5,37,37.5], borderColor:'#b5f23d', tension:0.4, pointRadius:4},
+        {label:'Muslo D', data:[58,57.5,57,56.5], borderColor:'#4da6ff', tension:0.4, pointRadius:4},
+      ]
+    },
+    options:{responsive:true,maintainAspectRatio:false,plugins:{legend:{labels:{color:'#888',font:{size:11}}}},
+      scales:{x:{grid:{color:'#2e2e2e'},ticks:{color:'#888',font:{size:11}}},
+        y:{grid:{color:'#2e2e2e'},ticks:{color:'#888',font:{size:11}}}}}
+  });
+}
+
+// ——— ACCIONES UI ———
+function addFood(btn) {
+  const body = btn.closest('.meal-block').querySelector('.meal-block-body');
+  const row = document.createElement('div');
+  row.className = 'food-row';
+  row.innerHTML = `
+    <div><input type="text" placeholder="Nuevo alimento" style="background:none;border:none;color:var(--text);font-size:0.8rem;width:100%;"></div>
+    <div><input type="number" value="100" style="background:none;border:none;color:var(--green);font-size:0.8rem;width:100%;"></div>
+    <div style="color:var(--muted)">—</div><div style="color:var(--muted)">—</div>
+    <div style="color:var(--muted)">—</div><div style="color:var(--muted)">—</div>
+    <div><button style="background:none;border:none;color:var(--muted2);cursor:pointer;font-size:0.8rem;" onclick="this.closest('.food-row').remove()">✕</button></div>`;
+  body.appendChild(row);
+}
+
+function addMeal() {
+  const c = document.getElementById('meals-container');
+  const div = document.createElement('div');
+  div.className = 'meal-block';
+  div.innerHTML = `<div class="meal-block-header"><div><div class="meal-block-name">🍽️ Nueva comida</div><div class="meal-block-macros">Sin alimentos aún</div></div><div><button class="btn btn-outline btn-sm" onclick="addFood(this)">+ Alimento</button></div></div><div class="meal-block-body"><div class="food-row"><div class="col-head">Alimento</div><div class="col-head">Gramos</div><div class="col-head">Kcal</div><div class="col-head">Proteína</div><div class="col-head">Carbos</div><div class="col-head">Grasas</div><div></div></div></div>`;
+  c.appendChild(div);
+}
+
+function addExercise() {
+  const card = document.querySelector('#section-entrenamiento .card .exercise-row');
+  const parent = card?.parentElement;
+  if (!parent) return;
+  const row = document.createElement('div');
+  row.className = 'exercise-row';
+  row.innerHTML = `<div><input type="text" placeholder="Ejercicio" style="background:none;border:none;color:var(--text);font-size:0.83rem;width:100%;"></div><div><input type="number" value="3" style="background:none;border:none;color:var(--green);font-size:0.83rem;width:40px;"></div><div><input type="text" value="10-12" style="background:none;border:none;color:var(--muted);font-size:0.83rem;width:60px;"></div><div><input type="text" value="—" style="background:none;border:none;color:var(--orange);font-size:0.83rem;width:70px;"></div><div><input type="text" value="75s" style="background:none;border:none;color:var(--muted);font-size:0.83rem;width:60px;"></div><div><button style="background:none;border:none;color:var(--muted2);cursor:pointer;font-size:0.8rem;" onclick="this.closest('.exercise-row').remove()">✕</button></div>`;
+  parent.insertBefore(row, parent.lastElementChild);
+}
+
+function showDay(day) {
+  const names = {lunes:'Lunes — Pecho / Tríceps',martes:'Martes — Espalda / Bíceps',miercoles:'Miércoles — Piernas',jueves:'Jueves — Hombros / Traps',viernes:'Viernes — Full Body'};
+  document.getElementById('day-title').innerHTML = `<div class="dot" style="background:var(--green)"></div>${names[day]||day}`;
+}
+
+function uploadPhoto(el, id) {
+  const inp = document.createElement('input');
+  inp.type = 'file'; inp.accept = 'image/*';
+  inp.onchange = e => {
+    const f = e.target.files[0];
+    if (!f) return;
+    const r = new FileReader();
+    r.onload = ev => {
+      el.innerHTML = `<img src="${ev.target.result}" alt="foto"><div class="photo-label">${id}</div>`;
+    };
+    r.readAsDataURL(f);
+  };
+  inp.click();
+}
+
+function addPhotoSet() {
+  const h = document.getElementById('photo-history');
+  const d = new Date().toLocaleDateString('es-CO',{day:'2-digit',month:'long',year:'numeric'});
+  const div = document.createElement('div');
+  div.style.marginBottom = '20px';
+  const sem = Math.ceil((document.querySelectorAll('#photo-history > div').length + 1));
+  div.innerHTML = `<p style="font-size:0.78rem;color:var(--muted);margin-bottom:10px;border-bottom:1px solid var(--border);padding-bottom:8px;">Semana ${sem+5} — ${d}</p><div class="photo-grid" style="grid-template-columns:repeat(3,100px);">${['Frente','Lateral','Espalda'].map(v=>`<div class="photo-slot" onclick="uploadPhoto(this,'nueva-${v.toLowerCase()}')"><div class="photo-add-icon">📷</div><div class="photo-add-text">${v}</div></div>`).join('')}</div>`;
+  h.insertBefore(div, h.firstChild);
+}
+
+function addHistoryWeek() { addPhotoSet(); }
+
+// ——— GUARDADO (simulado) ———
+function savePlan() { showToast('Plan nutricional guardado ✓'); }
+function saveSesion() { showToast('Sesión de entrenamiento registrada ✓'); }
+function saveMedicion() { showToast('Medición guardada ✓'); }
+function saveAnamnesis() { showToast('Anamnesis actualizada ✓'); }
+
+function showToast(msg) {
+  const t = document.createElement('div');
+  t.style.cssText = 'position:fixed;bottom:24px;right:24px;background:#b5f23d;color:#000;padding:10px 18px;border-radius:10px;font-size:0.83rem;font-weight:500;z-index:999;animation:fadeIn 0.2s;';
+  t.textContent = msg;
+  document.body.appendChild(t);
+  setTimeout(() => t.remove(), 2500);
+}
+
+// ——— IA CALLS ———
+async function callAI(prompt, loaderId, resultId) {
+  document.getElementById(loaderId).classList.add('show');
+  document.getElementById(resultId).style.display = 'none';
+  try {
+    const res = await fetch('https://api.anthropic.com/v1/messages', {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body:JSON.stringify({
+        model:'claude-sonnet-4-20250514', max_tokens:1000,
+        messages:[{role:'user', content:prompt}]
+      })
+    });
+    const d = await res.json();
+    const text = d.content?.map(b => b.text||'').join('') || 'No se pudo generar respuesta.';
+    document.getElementById(resultId).textContent = text;
+    document.getElementById(resultId).style.display = 'block';
+  } catch(e) {
+    document.getElementById(resultId).textContent = 'Error de conexión. Intentá de nuevo.';
+    document.getElementById(resultId).style.display = 'block';
+  }
+  document.getElementById(loaderId).classList.remove('show');
+}
+
+function generateNutritionPlan() {
+  const nombre = document.getElementById('ia-nombre').value || 'el cliente';
+  const obj = document.getElementById('ia-objetivo').value;
+  const gustan = document.getElementById('ia-gustan').value || 'no especificado';
+  const nogustan = document.getElementById('ia-nogustan').value || 'ninguno';
+  const obs = document.getElementById('ia-obs').value || '';
+  const prompt = `Eres nutricionista deportivo experto. Genera un plan nutricional completo en español para ${nombre}. Objetivo: ${obj}. Le gustan: ${gustan}. No le gustan: ${nogustan}. Obs: ${obs}. Incluye: TMB/TDEE calculados, macros en gramos, 4-5 comidas con alimentos y gramos exactos, micronutrientes clave, y suplementación básica. Formato claro y estructurado.`;
+  callAI(prompt, 'ai-loader-nut', 'ia-result-nut');
+}
+
+function generateWorkout() {
+  const dias = document.getElementById('trn-dias').value;
+  const obj = document.getElementById('trn-obj').value;
+  const nivel = document.getElementById('trn-nivel').value;
+  const equip = document.getElementById('trn-equip').value;
+  const les = document.getElementById('trn-lesiones').value || 'ninguna';
+  const prompt = `Eres preparador físico experto. Diseña una rutina de entrenamiento semanal en español: ${dias} días/semana, objetivo ${obj}, nivel ${nivel}, equipamiento: ${equip}, limitaciones: ${les}. Incluye: nombre de cada ejercicio, series x repeticiones, carga recomendada y descanso. Organiza por días y grupos musculares.`;
+  callAI(prompt, 'ai-loader-trn', 'ia-result-trn');
+}
+
+function generatePeriodization() {
+  const dur = document.getElementById('per-dur').value;
+  const obj = document.getElementById('per-obj').value;
+  const prompt = `Eres especialista en periodización deportiva. Diseña un plan de periodización de ${dur} semanas en español para objetivo: ${obj}. Incluye: fases (nombres, semanas, enfoque), calorías por fase, volumen de entrenamiento, cardio recomendado y ajustes clave de nutrición. Formato tabla resumida.`;
+  callAI(prompt, 'ai-loader-per', 'ia-result-per');
+}
+
+// Fecha de hoy por defecto en inputs date
+document.querySelectorAll('input[type=date]').forEach(el => {
+  if (!el.value) el.value = new Date().toISOString().split('T')[0];
+});
+</script>
+</body>
+</html>
